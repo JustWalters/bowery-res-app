@@ -129,44 +129,17 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = { neighborhoodData: [], countyData: [] };
+    this.apiResults = {};
     this.updateRegion = this.updateRegion.bind(this);
   }
 
   componentDidMount() {
-    const apiBase = 'https://api.census.gov/data';
-    const year = '2015';
-    const dataset = 'acs5/profile';
-    const vars = ['DP03_0018E', 'DP03_0019E', 'DP03_0020E'];
-    const url = `${[apiBase, year, dataset].join('/')}?get=${encodeURIComponent(vars.join(','))}`;
-
     this.updateRegion();
-    const urlCounty = `${url}&${this.geoCounty}`;
-    const urlNeighborhood = `${url}&${this.geoNeighborhood}`;
-
-    fetch(urlCounty)
-    .then(res => {
-      if (res.ok) {
-        return res.json();
-      } else {}
-    })
-    .then(json => {
-      this.setState({countyData: json});
-    })
-    .catch(err => {console.error(err);});
-
-    fetch(urlNeighborhood)
-    .then(res => {
-      if (res.ok) {
-        return res.json();
-      } else {}
-    })
-    .then(json => {
-      this.setState({neighborhoodData: json});
-    })
-    .catch(err => {console.error(err);});
   }
 
   updateRegion(region) {
+    if (!region) region = 'brooklyn';
+
     switch (region) {
       case 'manhattan':
         this.neighborhood = 'East Village';
@@ -183,10 +156,80 @@ class App extends Component {
         break;
     }
 
-    this.updateTable();
+    this.updateTable(region);
   }
 
-  updateTable() {}
+  updateTable(region) {
+    const apiBase = 'https://api.census.gov/data';
+    const year = '2015';
+    const dataset = 'acs5/profile';
+    const vars = ['DP03_0018E', 'DP03_0019E', 'DP03_0020E'];
+    const url = `${[apiBase, year, dataset].join('/')}?get=${encodeURIComponent(vars.join(','))}`;
+
+    const urlCounty = `${url}&${this.geoCounty}`;
+    const urlNeighborhood = `${url}&${this.geoNeighborhood}`;
+
+    if (this.apiResults[region]) {
+      let data;
+      if (data = this.apiResults[region].neighborhoodData) {
+        this.setState({
+          neighborhoodData: data
+        });
+      } else {
+        this.fetchInfo(urlNeighborhood)
+        .then(json => {
+          this.setState({
+            neighborhoodData: json
+          });
+          this.apiResults[region].neighborhoodData = json;
+        });
+      }
+
+      if (data = this.apiResults[region].countyData) {
+        this.setState({
+          countyData: data
+        });
+      } else {
+        this.fetchInfo(urlCounty)
+        .then(json => {
+          this.setState({
+            countyData: json
+          });
+          this.apiResults[region].countyData = json;
+        })
+      }
+    } else {
+      this.apiResults[region] = {};
+      this.fetchInfo(urlNeighborhood)
+      .then(json => {
+        this.setState({
+          neighborhoodData: json
+        });
+        this.apiResults[region].neighborhoodData = json;
+      });
+
+      this.fetchInfo(urlCounty)
+      .then(json => {
+        this.setState({
+          countyData: json
+        });
+        this.apiResults[region].countyData = json;
+      });
+    }
+  }
+
+  fetchInfo(url) {
+    return fetch(url)
+    .then(res => {
+      if (res.ok) {
+        return res.json();
+      } else throw res;
+    })
+    .catch(err => {
+      console.error(err);
+      return {};
+    });
+  }
 
   render() {
     return (
