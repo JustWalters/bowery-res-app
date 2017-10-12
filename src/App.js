@@ -82,7 +82,7 @@ class CensusTable extends Component {
     let carpoolPercent = carpool/commuters;
     let otherPercent = 1 - ((alone + carpool)/commuters);
 
-    return {
+    let res = {
       commuters,
       alone,
       carpool,
@@ -91,6 +91,20 @@ class CensusTable extends Component {
       carpoolPercent,
       otherPercent
     };
+
+    for (let key in res) {
+      if (res.hasOwnProperty(key)) {
+        res[key] = this.formatNumber(res[key]);
+      }
+    }
+    return res;
+  }
+
+  formatNumber(num) {
+    if (num < 1) {
+      return num.toLocaleString('en-US', {style: 'percent', minimumFractionDigits: 2});
+    }
+    return num.toLocaleString('en-US');
   }
 
   render() {
