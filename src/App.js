@@ -98,10 +98,38 @@ class CensusTable extends Component {
   }
 }
 
+class RegionSelect extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: 'brooklyn'
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange(event) {
+    this.setState({
+      value: event.target.value
+    });
+    this.props.onChange(event.target.value);
+  }
+
+  render() {
+    return (
+      <select value={this.state.value} onChange={this.handleChange}>
+        <option value="manhattan">Manhattan</option>
+        <option value="brooklyn">Brooklyn</option>
+      </select>
+    );
+  }
+}
+
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = { neighborhoodData: [], countyData: [] };
+    this.updateRegion = this.updateRegion.bind(this);
   }
 
   componentDidMount() {
@@ -109,18 +137,11 @@ class App extends Component {
     const year = '2015';
     const dataset = 'acs5/profile';
     const vars = ['DP03_0018E', 'DP03_0019E', 'DP03_0020E'];
-    const geoCounty = `for=county:061&in=state:36`;
-    const geoNeighborhood = `for=zip+code+tabulation+area:10009`;
+    const url = `${[apiBase, year, dataset].join('/')}?get=${encodeURIComponent(vars.join(','))}`;
 
-    this.neighborhood = 'Slope';
-    this.county = 'Kings';
-
-    let urlCounty, urlNeighborhood, url = [apiBase, year, dataset].join('/');
-    let getParam = vars.join(',');
-    url = `${url}?get=${encodeURIComponent(getParam)}`;
-
-    urlCounty = `${url}&${geoCounty}`;
-    urlNeighborhood = `${url}&${geoNeighborhood}`;
+    this.updateRegion();
+    const urlCounty = `${url}&${this.geoCounty}`;
+    const urlNeighborhood = `${url}&${this.geoNeighborhood}`;
 
     fetch(urlCounty)
     .then(res => {
@@ -145,9 +166,32 @@ class App extends Component {
     .catch(err => {console.error(err);});
   }
 
+  updateRegion(region) {
+    switch (region) {
+      case 'manhattan':
+        this.neighborhood = 'East Village';
+        this.county = 'New York County';
+        this.geoCounty = 'for=county:061&in=state:36';
+        this.geoNeighborhood = 'for=zip+code+tabulation+area:10009';
+        break;
+      case 'brooklyn':
+      default:
+        this.neighborhood = 'Park Slope';
+        this.county = 'King\'s County';
+        this.geoCounty = 'for=county:047&in=state:36';
+        this.geoNeighborhood = 'for=zip+code+tabulation+area:11215';
+        break;
+    }
+
+    this.updateTable();
+  }
+
+  updateTable() {}
+
   render() {
     return (
       <div className="App">
+        <RegionSelect onChange={this.updateRegion} />
         <CensusTable neighborhoodData={this.state.neighborhoodData} countyData={this.state.countyData} neighborhood={this.neighborhood} county={this.county} />
       </div>
     );
