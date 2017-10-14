@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import RegionSelect from './RegionSelect';
+import Select from './Select';
 import CensusTable from './CensusTable';
 import './App.css';
 
@@ -8,6 +8,10 @@ class App extends Component {
     super(props);
     this.state = { neighborhoodData: [], countyData: [] };
     this.apiResults = {};
+    this.regions = [
+      { label: 'Manhattan', value: 'manhattan' },
+      { label: 'Brooklyn', value: 'brooklyn' }
+    ];
     this.updateRegion = this.updateRegion.bind(this);
   }
 
@@ -16,8 +20,6 @@ class App extends Component {
   }
 
   updateRegion(region) {
-    if (!region) region = 'brooklyn';
-
     switch (region) {
       case 'manhattan':
         this.neighborhood = 'East Village';
@@ -90,7 +92,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <RegionSelect onChange={this.updateRegion} />
+        <Select onChange={this.updateRegion} options={this.regions} />
         <CensusTable neighborhoodData={this.state.neighborhoodData} countyData={this.state.countyData} neighborhood={this.neighborhood} county={this.county} />
       </div>
     );
