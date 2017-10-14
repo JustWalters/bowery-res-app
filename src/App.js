@@ -183,51 +183,26 @@ class App extends Component {
     const urlCounty = `${url}&${this.geoCounty}`;
     const urlNeighborhood = `${url}&${this.geoNeighborhood}`;
 
-    if (this.apiResults[region]) {
-      let data;
-      if (data = this.apiResults[region].neighborhoodData) {
-        this.setState({
-          neighborhoodData: data
-        });
-      } else {
-        this.fetchInfo(urlNeighborhood)
-        .then(json => {
-          this.setState({
-            neighborhoodData: json
-          });
-          this.apiResults[region].neighborhoodData = json;
-        });
-      }
-
-      if (data = this.apiResults[region].countyData) {
-        this.setState({
-          countyData: data
-        });
-      } else {
-        this.fetchInfo(urlCounty)
-        .then(json => {
-          this.setState({
-            countyData: json
-          });
-          this.apiResults[region].countyData = json;
-        })
-      }
-    } else {
+    if (!this.apiResults[region]) {
       this.apiResults[region] = {};
-      this.fetchInfo(urlNeighborhood)
-      .then(json => {
-        this.setState({
-          neighborhoodData: json
-        });
-        this.apiResults[region].neighborhoodData = json;
-      });
+    }
 
-      this.fetchInfo(urlCounty)
+    this.updateState(region, 'neighborhoodData', urlNeighborhood);
+    this.updateState(region, 'countyData', urlCounty);
+  }
+
+  updateState(region, dataType, url) {
+    let data, newState = {};
+
+    if (data = this.apiResults[region][dataType]) {
+      newState[dataType] = data;
+      this.setState(newState);
+    } else {
+      this.fetchInfo(url)
       .then(json => {
-        this.setState({
-          countyData: json
-        });
-        this.apiResults[region].countyData = json;
+        newState[dataType] = json;
+        this.setState(newState);
+        this.apiResults[region][dataType] = json;
       });
     }
   }
