@@ -1,143 +1,7 @@
 import React, { Component } from 'react';
+import RegionSelect from './RegionSelect';
+import CensusTable from './CensusTable';
 import './App.css';
-
-class TableRow extends Component {
-  render() {
-    return (
-      <tr>
-      {this.props.cells.map((cell, idx) => <td key={idx}>{cell}</td>)}
-      </tr>
-    );
-  }
-}
-
-class Table extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      colNames: [],
-      data: []
-    };
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.data && nextProps.data.length >= 2) {
-      this.setState({
-        colNames: nextProps.data.splice(0,1)[0],
-        data: nextProps.data
-      });
-    }
-  }
-
-  render() {
-    return (
-      <table>
-        <thead>
-          <tr>
-          {this.state.colNames.map((col, idx) => <th key={idx}>{col}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {this.state.data.map((row, idx) => <TableRow key={idx} cells={row} />)}
-        </tbody>
-      </table>
-    );
-  }
-}
-
-class CensusTable extends Component {
-  constructor(props){
-    super(props);
-    this.data = [];
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (!(nextProps.neighborhoodData[1] && nextProps.countyData[1])) {
-      // Don't do anything unless we have both sets of data
-      return;
-    }
-
-    let neighborhood = nextProps.neighborhood;
-    let county = nextProps.county;
-
-    let countyData = this.calculateValues(nextProps.countyData[1]);
-    let neighborhoodData = this.calculateValues(nextProps.neighborhoodData[1]);
-
-    let row0 = ['', neighborhood, '% Total (neighborhood)', county, '% Total (county)'];
-    let row1 = ['2015 Est. Pop 16+ by Transp. to Work', neighborhoodData.commuters, '', countyData.commuters, ''];
-    let row2 = ['Drove Alone', neighborhoodData.alone, neighborhoodData.alonePercent, countyData.alone, countyData.alonePercent];
-    let row3 = ['Carpooled', neighborhoodData.carpool, neighborhoodData.carpoolPercent, countyData.carpool, countyData.carpoolPercent];
-    let row4 = ['Other', neighborhoodData.other, neighborhoodData.otherPercent, countyData.other, countyData.otherPercent];
-    this.data = [row0, row1, row2, row3, row4];
-  }
-
-  calculateValues(data) {
-    let commuters = Number(data[0]);
-    let alone = Number(data[1]);
-    let carpool = Number(data[2]);
-    let other = commuters - (alone + carpool);
-
-    let alonePercent = alone/commuters;
-    let carpoolPercent = carpool/commuters;
-    let otherPercent = 1 - ((alone + carpool)/commuters);
-
-    let res = {
-      commuters,
-      alone,
-      carpool,
-      other,
-      alonePercent,
-      carpoolPercent,
-      otherPercent
-    };
-
-    for (let key in res) {
-      if (res.hasOwnProperty(key)) {
-        res[key] = this.formatNumber(res[key]);
-      }
-    }
-    return res;
-  }
-
-  formatNumber(num) {
-    if (num < 1) {
-      return num.toLocaleString('en-US', {style: 'percent', minimumFractionDigits: 2});
-    }
-    return num.toLocaleString('en-US');
-  }
-
-  render() {
-    return <Table data={this.data}/>;
-  }
-}
-
-class RegionSelect extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      value: 'brooklyn'
-    };
-
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange(event) {
-    this.setState({
-      value: event.target.value
-    });
-    this.props.onChange(event.target.value);
-  }
-
-  render() {
-    return (
-      <select value={this.state.value} onChange={this.handleChange}>
-        <option value="manhattan">Manhattan</option>
-        <option value="brooklyn">Brooklyn</option>
-      </select>
-    );
-  }
-}
 
 class App extends Component {
   constructor(props) {
@@ -200,6 +64,8 @@ class App extends Component {
     } else {
       this.fetchInfo(url)
       .then(json => {
+        if (!Object.keys(json).length) return;
+
         newState[dataType] = json;
         this.setState(newState);
         this.apiResults[region][dataType] = json;
@@ -216,6 +82,7 @@ class App extends Component {
     })
     .catch(err => {
       console.error(err);
+      alert('Sorry, something went wrong. Please try refreshing.');
       return {};
     });
   }
