@@ -10,6 +10,11 @@ class Select extends Component {
     this.handleChange = this.handleChange.bind(this);
   }
 
+  componentDidMount() {
+    if (this.props.noActionOnMount) return;
+    this.props.onChange(this.state.value);
+  }
+
   handleChange(event) {
     this.setState({
       value: event.target.value

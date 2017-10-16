@@ -9,31 +9,35 @@ class App extends Component {
     this.state = { neighborhoodData: [], countyData: [] };
     this.apiResults = {};
     this.regions = [
-      { label: 'Manhattan', value: 'manhattan' },
-      { label: 'Brooklyn', value: 'brooklyn' }
+      {
+        label: 'Manhattan',
+        value: 'manhattan',
+        county: 'New York County',
+        neighborhood: 'East Village',
+        geoCounty: 'for=county:061&in=state:36',
+        geoNeighborhood: 'for=zip+code+tabulation+area:10009'
+      },
+      {
+        label: 'Brooklyn',
+        value: 'brooklyn',
+        county: 'King\'s County',
+        neighborhood: 'Park Slope',
+        geoCounty: 'for=county:047&in=state:36',
+        geoNeighborhood: 'for=zip+code+tabulation+area:11215'
+      }
     ];
+
     this.updateRegion = this.updateRegion.bind(this);
   }
 
-  componentDidMount() {
-    this.updateRegion();
-  }
-
   updateRegion(region) {
-    switch (region) {
-      case 'manhattan':
-        this.neighborhood = 'East Village';
-        this.county = 'New York County';
-        this.geoCounty = 'for=county:061&in=state:36';
-        this.geoNeighborhood = 'for=zip+code+tabulation+area:10009';
-        break;
-      case 'brooklyn':
-      default:
-        this.neighborhood = 'Park Slope';
-        this.county = 'King\'s County';
-        this.geoCounty = 'for=county:047&in=state:36';
-        this.geoNeighborhood = 'for=zip+code+tabulation+area:11215';
-        break;
+    let regionInfo = this.regions.find(r => region === r.value);
+
+    if (regionInfo) {
+      this.county = regionInfo.county;
+      this.neighborhood = regionInfo.neighborhood;
+      this.geoCounty = regionInfo.geoCounty;
+      this.geoNeighborhood = regionInfo.geoNeighborhood;
     }
 
     this.updateTable(region);
